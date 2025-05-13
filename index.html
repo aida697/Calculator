@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>კობაის კალკულატორი @aida697</title>
+    <style>
+:root {
+    --primary: #00c16a;
+    --background: #1e1e2f;
+    --foreground: #f4f4f4;
+    --input-bg: #2c2c3c;
+    --border: #3a3a4d;
+    --hover: #00e67a;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--background);
+    color: var(--foreground);
+    margin: 0;
+    padding: 0;
+}
+
+.window {
+    background-color: #26263a;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    margin: 40px auto;
+    width: 520px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.title-bar {
+    background: linear-gradient(90deg, var(--primary), #009f5f);
+    color: #fff;
+    padding: 12px 16px;
+    font-size: 18px;
+    font-weight: bold;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.content {
+    padding: 20px;
+}
+
+input, select {
+    background-color: var(--input-bg);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+input[type="checkbox"] {
+    width: auto;
+}
+
+button {
+    background-color: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s ease;
+}
+
+button:hover {
+    background-color: var(--hover);
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+.tabs {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.tab {
+    padding: 10px 16px;
+    cursor: pointer;
+    background-color: transparent;
+    color: var(--foreground);
+    font-weight: 500;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.tab.active {
+    border-bottom: 3px solid var(--primary);
+    color: var(--primary);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+th {
+    background-color: #2f2f44;
+    color: var(--primary);
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+h3 {
+    color: var(--primary);
+    margin-top: 20px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 5px;
+}
+
+.calculator-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-gap: 10px;
+    margin-top: 20px;
+}
+
+.calculator-display {
+    grid-column: span 4;
+    background-color: var(--input-bg);
+    padding: 15px;
+    text-align: right;
+    font-size: 24px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    min-height: 36px;
+}
+
+.calculator-btn {
+    padding: 15px;
+    font-size: 18px;
+}
+
+.calculator-btn.span-2 {
+    grid-column: span 2;
+}
+
+.exchange-rates {
+    margin-top: 20px;
+}
+
+.exchange-rates table {
+    width: 100%;
+}
+
+.exchange-rates td {
+    padding: 8px;
+}
+
+.exchange-rates .rate-value {
+    text-align: right;
+    font-family: monospace;
+}
+
+.refresh-btn {
+    margin-top: 15px;
+    width: 100%;
+}
+
+.loading {
+    color: #aaa;
+}
+
+.error {
+    color: #ff6b6b;
+}
+    </style>
+</head>
+<body>
+    <div class="window" id="calculatorWindow">
+        <div class="title-bar">კობაის კალკულატორი</div>
+        <div class="content">
+            <div class="tabs">
+                <div class="tab active" data-tab="exchange">ვალუტა</div>
+                <div class="tab" data-tab="calculator">კალკულატორი</div>
+                <div class="tab" data-tab="rates">კურსი</div>
+                <div class="tab" data-tab="settings">პარამეტრები</div>
+            </div>
+            
+            <div id="exchange" class="tab-content active">
+                <table>
+                    <tr>
+                        <td>თანხა:</td>
+                        <td><input type="number" id="amount" value="1000" min="0" step="0.01" style="width: 100px;"></td>
+                    </tr>
+                    <tr>
+                        <td>From:</td>
+                        <td>
+                            <select id="fromCurrency">
+                                <option value="USD">USD</option>
+                                <option value="RUB">RUB</option>
+                                <option value="GEL">GEL</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>To:</td>
+                        <td>
+                            <select id="toCurrency">
+                                <option value="USD">USD</option>
+                                <option value="RUB">RUB</option>
+                                <option value="GEL">GEL</option>
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+                <div style="text-align: right; margin-top: 10px;">
+                    <button id="calculateBtn">გამათვლა</button>
+                </div>
+                
+                <div style="margin-top: 20px; border-top: 1px solid #B5B5B5; padding-top: 10px;">
+                    <p>გლობ. ფასი: <span id="baseRate">-</span></p>
+                    <p>შენი ფასი: <span id="yourRate">-</span></p>
+                    <p>მაგება: <span id="profit">-</span></p>
+                </div>
+            </div>
+            
+            <div id="calculator" class="tab-content">
+                <div class="calculator-display" id="calcDisplay">0</div>
+                <div class="calculator-grid">
+                    <button class="calculator-btn" onclick="appendToDisplay('7')">7</button>
+                    <button class="calculator-btn" onclick="appendToDisplay('8')">8</button>
+                    <button class="calculator-btn" onclick="appendToDisplay('9')">9</button>
+                    <button class="calculator-btn" onclick="clearDisplay()">C</button>
+                    <button class="calculator-btn" onclick="appendToDisplay('4')">4</button>
+                    <button class="calculator-btn" onclick="appendToDisplay('5')">5</button>
+                    <button class="calculator-btn" onclick="appendToDisplay('6')">6</button>
+                    <button class="calculator-btn" onclick="appendToDisplay('+')">+</button>
+                    <button class="calculator-btn" onclick="appendToDisplay('1')">1</button>
+                    <button class="calculator-btn" onclick="appendToDisplay('2')">2</button>
+                    <button class="calculator-btn" onclick="appendToDisplay('3')">3</button>
+                    <button class="calculator-btn" onclick="appendToDisplay('-')">-</button>
+                    <button class="calculator-btn" onclick="appendToDisplay('0')">0</button>
+                    <button class="calculator-btn" onclick="appendToDisplay('.')">.</button>
+                    <button class="calculator-btn" onclick="calculate()">=</button>
+                    <button class="calculator-btn" onclick="appendToDisplay('*')">×</button>
+                    <button class="calculator-btn span-2" onclick="appendToDisplay('(')">(</button>
+                    <button class="calculator-btn span-2" onclick="appendToDisplay(')')">)</button>
+                    <button class="calculator-btn" onclick="appendToDisplay('/')">÷</button>
+                    <button class="calculator-btn span-4" onclick="backspace()">← Backspace</button>
+                </div>
+            </div>
+            
+            <div id="rates" class="tab-content">
+                <div class="exchange-rates">
+                    <h3>მიმდინარე კურსები</h3>
+                    <table>
+                        <tr>
+                            <td>RUB → GEL:</td>
+                            <td class="rate-value" id="rate_RUB_GEL">-</td>
+                        </tr>
+                        <tr>
+                            <td>GEL → RUB:</td>
+                            <td class="rate-value" id="rate_GEL_RUB">-</td>
+                        </tr>
+                        <tr>
+                            <td>RUB → USD:</td>
+                            <td class="rate-value" id="rate_RUB_USD">-</td>
+                        </tr>
+                        <tr>
+                            <td>USD → RUB:</td>
+                            <td class="rate-value" id="rate_USD_RUB">-</td>
+                        </tr>
+                        <tr>
+                            <td>USD → GEL:</td>
+                            <td class="rate-value" id="rate_USD_GEL">-</td>
+                        </tr>
+                        <tr>
+                            <td>GEL → USD:</td>
+                            <td class="rate-value" id="rate_GEL_USD">-</td>
+                        </tr>
+                    </table>
+                    <button class="refresh-btn" id="refreshRatesBtn">განახლება</button>
+                </div>
+            </div>
+            
+            <div id="settings" class="tab-content">
+                <table>
+                    <tr>
+                        <td style="width: 150px;">API Key:</td>
+                        <td><input type="text" id="apiKey" style="width: 100%;" value="b7d4d462eb50fc35c85a9a450d230d80"></td>
+                    </tr>
+                </table>
+                
+                <div class="checkbox-container">
+                    <input type="checkbox" id="useApi" checked>
+                    <label for="useApi">API ჩართვა</label>
+                </div>
+                
+                <div id="manualRatesSection">
+                    <h3>მექ. ფასი</h3>
+                    <table>
+                        <tr>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>ფასი</th>
+                        </tr>
+                        <tr>
+                            <td>USD</td>
+                            <td>GEL</td>
+                            <td><input type="number" id="rate_USD_GEL_manual" min="0" step="0.0001" style="width: 80px;"></td>
+                        </tr>
+                        <tr>
+                            <td>GEL</td>
+                            <td>USD</td>
+                            <td><input type="number" id="rate_GEL_USD_manual" min="0" step="0.0001" style="width: 80px;"></td>
+                        </tr>
+                        <tr>
+                            <td>USD</td>
+                            <td>RUB</td>
+                            <td><input type="number" id="rate_USD_RUB_manual" min="0" step="0.0001" style="width: 80px;"></td>
+                        </tr>
+                        <tr>
+                            <td>RUB</td>
+                            <td>USD</td>
+                            <td><input type="number" id="rate_RUB_USD_manual" min="0" step="0.0001" style="width: 80px;"></td>
+                        </tr>
+                        <tr>
+                            <td>GEL</td>
+                            <td>RUB</td>
+                            <td><input type="number" id="rate_GEL_RUB_manual" min="0" step="0.0001" style="width: 80px;"></td>
+                        </tr>
+                        <tr>
+                            <td>RUB</td>
+                            <td>GEL</td>
+                            <td><input type="number" id="rate_RUB_GEL_manual" min="0" step="0.0001" style="width: 80px;"></td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <h3>მარჟი (%)</h3>
+                <table>
+                    <tr>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>მარჟი</th>
+                    </tr>
+                    <tr>
+                        <td>USD</td>
+                        <td>GEL</td>
+                        <td><input type="number" id="margin_USD_GEL" min="0" max="100" step="0.1" style="width: 60px;" value="3"></td>
+                    </tr>
+                    <tr>
+                        <td>GEL</td>
+                        <td>USD</td>
+                        <td><input type="number" id="margin_GEL_USD" min="0" max="100" step="0.1" style="width: 60px;" value="3"></td>
+                    </tr>
+                    <tr>
+                        <td>USD</td>
+                        <td>RUB</td>
+                        <td><input type="number" id="margin_USD_RUB" min="0" max="100" step="0.1" style="width: 60px;" value="5"></td>
+                    </tr>
+                    <tr>
+                        <td>RUB</td>
+                        <td>USD</td>
+                        <td><input type="number" id="margin_RUB_USD" min="0" max="100" step="0.1" style="width: 60px;" value="5"></td>
+                    </tr>
+                    <tr>
+                        <td>GEL</td>
+                        <td>RUB</td>
+                        <td><input type="number" id="margin_GEL_RUB" min="0" max="100" step="0.1" style="width: 60px;" value="4"></td>
+                    </tr>
+                    <tr>
+                        <td>RUB</td>
+                        <td>GEL</td>
+                        <td><input type="number" id="margin_RUB_GEL" min="0" max="100" step="0.1" style="width: 60px;" value="4"></td>
+                    </tr>
+                </table>
+                
+                <div class="button-group">
+                    <button id="clearStorageBtn">LocalStorage წაშლა</button>
+                    <button id="saveSettingsBtn">შანახვა</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                this.classList.add('active');
+                document.getElementById(this.dataset.tab).classList.add('active');
+                
+
+                if (this.dataset.tab === 'rates') {
+                    updateExchangeRates();
+                }
+            });
+        });
+
+
+        let currentDisplay = '0';
+        const calcDisplay = document.getElementById('calcDisplay');
+
+        function updateDisplay() {
+            calcDisplay.textContent = currentDisplay;
+        }
+
+        function appendToDisplay(value) {
+            if (currentDisplay === '0' && value !== '.') {
+                currentDisplay = value;
+            } else {
+                currentDisplay += value;
+            }
+            updateDisplay();
+        }
+
+        function clearDisplay() {
+            currentDisplay = '0';
+            updateDisplay();
+        }
+
+        function backspace() {
+            if (currentDisplay.length === 1) {
+                currentDisplay = '0';
+            } else {
+                currentDisplay = currentDisplay.slice(0, -1);
+            }
+            updateDisplay();
+        }
+
+        function calculate() {
+            try {
+
+                const expression = currentDisplay.replace(/×/g, '*').replace(/÷/g, '/');
+                currentDisplay = eval(expression).toString();
+                updateDisplay();
+            } catch (error) {
+                currentDisplay = 'Error';
+                updateDisplay();
+                setTimeout(clearDisplay, 1500);
+            }
+        }
+
+
+        function loadSettings() {
+            const savedApiKey = localStorage.getItem('exchangeApiKey');
+            if (savedApiKey) document.getElementById('apiKey').value = savedApiKey;
+            
+            const useApi = localStorage.getItem('useApi');
+            document.getElementById('useApi').checked = useApi !== 'false';
+            
+            const currencies = ['USD', 'GEL', 'RUB'];
+            currencies.forEach(from => {
+                currencies.forEach(to => {
+                    if (from !== to) {
+                        const marginKey = `margin_${from}_${to}`;
+                        const savedMargin = localStorage.getItem(marginKey);
+                        if (savedMargin !== null) {
+                            document.getElementById(marginKey).value = savedMargin;
+                        }
+                        
+                        const rateKey = `rate_${from}_${to}_manual`;
+                        const savedRate = localStorage.getItem(rateKey);
+                        if (savedRate !== null) {
+                            document.getElementById(rateKey).value = savedRate;
+                        }
+                    }
+                });
+            });
+        }
+        
+        document.getElementById('clearStorageBtn').addEventListener('click', function() {
+            if (confirm('LocalStorage-ის წაშლა!')) {
+                localStorage.clear();
+                alert('LocalStorage წაიშალა! გვერდი განახლდება.');
+                location.reload();
+            }
+        });
+        
+        document.getElementById('saveSettingsBtn').addEventListener('click', function() {
+            const apiKey = document.getElementById('apiKey').value;
+            localStorage.setItem('exchangeApiKey', apiKey);
+            
+            const useApi = document.getElementById('useApi').checked;
+            localStorage.setItem('useApi', useApi);
+            
+            const currencies = ['USD', 'GEL', 'RUB'];
+            currencies.forEach(from => {
+                currencies.forEach(to => {
+                    if (from !== to) {
+                        const marginKey = `margin_${from}_${to}`;
+                        const margin = document.getElementById(marginKey).value;
+                        localStorage.setItem(marginKey, margin);
+                       
+                        const rateKey = `rate_${from}_${to}_manual`;
+                        const rate = document.getElementById(rateKey).value;
+                        if (rate) {
+                            localStorage.setItem(rateKey, rate);
+                        }
+                    }
+                });
+            });
+            
+            alert('პარამეტრები შანახულია!');
+        });
+        
+        async function getExchangeRate(fromCurrency, toCurrency) {
+            if (fromCurrency === toCurrency) {
+                return 1;
+            }
+            
+            const useApi = localStorage.getItem('useApi') !== 'false';
+            
+            if (useApi) {
+                try {
+                    const apiKey = localStorage.getItem('exchangeApiKey') || 'b7d4d462eb50fc35c85a9a450d230d80';
+                    const response = await fetch(
+                        `https://api.exchangerate.host/live?access_key=${apiKey}&source=${fromCurrency}&currencies=${toCurrency}&format=1`
+                    );
+                    const data = await response.json();
+                    
+                    if (!data.success) {
+                        throw new Error(data.error.info || 'API Error');
+                    }
+                    
+                    const rateKey = `${fromCurrency}${toCurrency}`;
+                    return data.quotes[rateKey];
+                } catch (error) {
+                    console.error('Error fetching exchange rates:', error);
+                    return null;
+                }
+            } else {
+                const rateKey = `rate_${fromCurrency}_${toCurrency}_manual`;
+                const manualRate = parseFloat(localStorage.getItem(rateKey));
+                
+                if (isNaN(manualRate)) {
+                    return null;
+                }
+                
+                return manualRate;
+            }
+        }
+        
+        document.getElementById('calculateBtn').addEventListener('click', async function() {
+            const amount = parseFloat(document.getElementById('amount').value);
+            const fromCurrency = document.getElementById('fromCurrency').value;
+            const toCurrency = document.getElementById('toCurrency').value;
+            
+            if (isNaN(amount)) {
+                alert('სწორ შაიყვანე თანხა! ');
+                return;
+            }
+            
+            const baseRate = await getExchangeRate(fromCurrency, toCurrency);
+            if (baseRate === null) {
+                alert(`ვერ მახერხდა გაცვლითი კურსის მიღება ${fromCurrency}-დან ${toCurrency}-მდე ახლით სცადე`);
+                return;
+            }
+            
+            const marginKey = `margin_${fromCurrency}_${toCurrency}`;
+            const margin = parseFloat(localStorage.getItem(marginKey)) || 0;
+            
+            const baseAmount = amount * baseRate;
+            const marginMultiplier = 1 - (margin / 100);
+            const yourRate = baseRate * marginMultiplier;
+            const yourAmount = amount * yourRate;
+            const profit = baseAmount - yourAmount;
+            
+            document.getElementById('baseRate').textContent = 
+                `${amount} ${fromCurrency} = ${baseAmount.toFixed(4)} ${toCurrency} (ფასი: ${baseRate.toFixed(6)})`;
+            
+            document.getElementById('yourRate').textContent = 
+                `${amount} ${fromCurrency} = ${yourAmount.toFixed(4)} ${toCurrency} (ფასი: ${yourRate.toFixed(6)}, -${margin}%)`;
+            
+            document.getElementById('profit').textContent = 
+                `${profit.toFixed(4)} ${toCurrency}`;
+        });
+        
+
+        async function updateExchangeRates() {
+
+            const group1 = [
+                { from: 'RUB', to: 'GEL', elementId: 'rate_RUB_GEL' },
+                { from: 'GEL', to: 'RUB', elementId: 'rate_GEL_RUB' },
+                { from: 'USD', to: 'GEL', elementId: 'rate_USD_GEL' }
+            ];
+            
+
+            const group2 = [
+                { from: 'GEL', to: 'USD', elementId: 'rate_GEL_USD' },
+                { from: 'RUB', to: 'USD', elementId: 'rate_RUB_USD' },
+                { from: 'USD', to: 'RUB', elementId: 'rate_USD_RUB' }
+            ];
+
+
+            group1.concat(group2).forEach(pair => {
+                const element = document.getElementById(pair.elementId);
+                element.textContent = 'Loading...';
+                element.className = 'rate-value loading';
+            });
+
+            try {
+
+                await fetchRateGroup(group1);
+                
+
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+
+                await fetchRateGroup(group2);
+                
+            } catch (error) {
+                console.error('Error updating rates:', error);
+            }
+        }
+
+        async function fetchRateGroup(pairs) {
+            const apiKey = localStorage.getItem('exchangeApiKey') || 'b7d4d462eb50fc35c85a9a450d230d80';
+            
+
+            const sourceCurrencies = [...new Set(pairs.map(pair => pair.from))];
+            
+            for (const source of sourceCurrencies) {
+                try {
+
+                    const targets = pairs
+                        .filter(pair => pair.from === source)
+                        .map(pair => pair.to);
+                    
+                    if (targets.length === 0) continue;
+                    
+                    const response = await fetch(
+                        `https://api.exchangerate.host/live?access_key=${apiKey}&source=${source}&currencies=${targets.join(',')}&format=1`
+                    );
+                    const data = await response.json();
+                    
+                    if (!data.success) {
+                        throw new Error(data.error.info || 'API Error');
+                    }
+                    
+
+                    pairs.forEach(pair => {
+                        if (pair.from === source) {
+                            const element = document.getElementById(pair.elementId);
+                            const rateKey = `${source}${pair.to}`;
+                            if (data.quotes && data.quotes[rateKey]) {
+                                element.textContent = data.quotes[rateKey].toFixed(6);
+                                element.className = 'rate-value';
+                            } else {
+                                element.textContent = 'Error';
+                                element.className = 'rate-value error';
+                            }
+                        }
+                    });
+                    
+                } catch (error) {
+                    console.error(`Error fetching ${source} rates:`, error);
+
+                    pairs.filter(pair => pair.from === source).forEach(pair => {
+                        const element = document.getElementById(pair.elementId);
+                        element.textContent = 'Error';
+                        element.className = 'rate-value error';
+                    });
+                }
+                
+
+                await new Promise(resolve => setTimeout(resolve, 3000));
+            }
+            
+
+            pairs.forEach(pair => {
+                const element = document.getElementById(pair.elementId);
+                if (element.textContent === 'Loading...') {
+                    const inversePair = pairs.find(p => p.from === pair.to && p.to === pair.from);
+                    if (inversePair) {
+                        const inverseElement = document.getElementById(inversePair.elementId);
+                        if (inverseElement.textContent !== 'Loading...' && inverseElement.textContent !== 'Error') {
+                            const inverseRate = 1 / parseFloat(inverseElement.textContent);
+                            element.textContent = inverseRate.toFixed(6);
+                            element.className = 'rate-value';
+                        }
+                    }
+                }
+            });
+        }
+
+        document.getElementById('refreshRatesBtn').addEventListener('click', function() {
+            updateExchangeRates();
+        });
+
+
+        loadSettings();
+        updateDisplay();
+        updateExchangeRates();
+    </script>
+</body>
+</html>

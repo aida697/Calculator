@@ -1,0 +1,17 @@
+{
+  "name": "KobaisCalculator",
+  "version": "0.0.1",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^28.1.0"
+  },
+  "build": {
+    "appId": "com.kobaiscalculator.aida697",
+    "win": {
+      "icon": "icon.ico"
+    }
+  }
+}
