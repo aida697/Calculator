@@ -200,11 +200,22 @@ h3 {
 .error {
     color: #ff6b6b;
 }
+
+/* New Logs Button Style */
+#viewLogsBtn {
+    margin-top: 15px;
+    width: 100%;
+    background-color: #4a6baf;
+}
+
+#viewLogsBtn:hover {
+    background-color: #5a7bbf;
+}
     </style>
 </head>
 <body>
     <div class="window" id="calculatorWindow">
-        <div class="title-bar">კობაის კალკულატორი [v0.0.1]</div>
+        <div class="title-bar">კობაის კალკულატორი [v0.0.2]</div>
         <div class="content">
             <div class="tabs">
                 <div class="tab active" data-tab="exchange">ვალუტა</div>
@@ -249,6 +260,9 @@ h3 {
                     <p>შენი ფასი: <span id="yourRate">-</span></p>
                     <p>მაგება: <span id="profit">-</span></p>
                 </div>
+                
+                <!-- New Logs Button -->
+                <button id="viewLogsBtn" onclick="window.location.href='logs.html'">ისტორიის ნახვა (logs.html)</button>
             </div>
             
             <div id="calculator" class="tab-content">
@@ -412,7 +426,9 @@ h3 {
     </div>
 
     <script>
-
+        // ======================
+        // Core Calculator Logic
+        // ======================
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', function() {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -421,13 +437,11 @@ h3 {
                 this.classList.add('active');
                 document.getElementById(this.dataset.tab).classList.add('active');
                 
-
                 if (this.dataset.tab === 'rates') {
                     updateExchangeRates();
                 }
             });
         });
-
 
         let currentDisplay = '0';
         const calcDisplay = document.getElementById('calcDisplay');
@@ -461,7 +475,6 @@ h3 {
 
         function calculate() {
             try {
-
                 const expression = currentDisplay.replace(/×/g, '*').replace(/÷/g, '/');
                 currentDisplay = eval(expression).toString();
                 updateDisplay();
@@ -472,7 +485,26 @@ h3 {
             }
         }
 
+        // ======================
+        // Exchange Rate & Logging
+        // ======================
+        function logTransaction(from, to, amount, baseRate, yourRate, profit) {
+            const logs = JSON.parse(localStorage.getItem('exchangeLogs') || '[]');
+            logs.push({
+                timestamp: new Date().toISOString(),
+                fromCurrency: from,
+                toCurrency: to,
+                amount: amount,
+                baseRate: baseRate,
+                yourRate: yourRate,
+                profit: profit
+            });
+            localStorage.setItem('exchangeLogs', JSON.stringify(logs));
+        }
 
+        // ======================
+        // Settings & Storage
+        // ======================
         function loadSettings() {
             const savedApiKey = localStorage.getItem('exchangeApiKey');
             if (savedApiKey) document.getElementById('apiKey').value = savedApiKey;
@@ -532,9 +564,12 @@ h3 {
                 });
             });
             
-            alert('პარამეტრები შანახულია!');
+            alert('პარამეტრები შენახულია!');
         });
-        
+
+        // ======================
+        // Exchange Rate API
+        // ======================
         async function getExchangeRate(fromCurrency, toCurrency) {
             if (fromCurrency === toCurrency) {
                 return 1;
@@ -605,24 +640,26 @@ h3 {
             
             document.getElementById('profit').textContent = 
                 `${profit.toFixed(4)} ${toCurrency}`;
+                
+            // Log the transaction
+            logTransaction(fromCurrency, toCurrency, amount, baseRate, yourRate, profit);
         });
-        
 
+        // ======================
+        // Rate Updates
+        // ======================
         async function updateExchangeRates() {
-
             const group1 = [
                 { from: 'RUB', to: 'GEL', elementId: 'rate_RUB_GEL' },
                 { from: 'GEL', to: 'RUB', elementId: 'rate_GEL_RUB' },
                 { from: 'USD', to: 'GEL', elementId: 'rate_USD_GEL' }
             ];
             
-
             const group2 = [
                 { from: 'GEL', to: 'USD', elementId: 'rate_GEL_USD' },
                 { from: 'RUB', to: 'USD', elementId: 'rate_RUB_USD' },
                 { from: 'USD', to: 'RUB', elementId: 'rate_USD_RUB' }
             ];
-
 
             group1.concat(group2).forEach(pair => {
                 const element = document.getElementById(pair.elementId);
@@ -631,15 +668,9 @@ h3 {
             });
 
             try {
-
                 await fetchRateGroup(group1);
-                
-
                 await new Promise(resolve => setTimeout(resolve, 500));
-                
-
                 await fetchRateGroup(group2);
-                
             } catch (error) {
                 console.error('Error updating rates:', error);
             }
@@ -647,13 +678,10 @@ h3 {
 
         async function fetchRateGroup(pairs) {
             const apiKey = localStorage.getItem('exchangeApiKey') || 'b7d4d462eb50fc35c85a9a450d230d80';
-            
-
             const sourceCurrencies = [...new Set(pairs.map(pair => pair.from))];
             
             for (const source of sourceCurrencies) {
                 try {
-
                     const targets = pairs
                         .filter(pair => pair.from === source)
                         .map(pair => pair.to);
@@ -669,7 +697,6 @@ h3 {
                         throw new Error(data.error.info || 'API Error');
                     }
                     
-
                     pairs.forEach(pair => {
                         if (pair.from === source) {
                             const element = document.getElementById(pair.elementId);
@@ -686,7 +713,6 @@ h3 {
                     
                 } catch (error) {
                     console.error(`Error fetching ${source} rates:`, error);
-
                     pairs.filter(pair => pair.from === source).forEach(pair => {
                         const element = document.getElementById(pair.elementId);
                         element.textContent = 'Error';
@@ -694,11 +720,9 @@ h3 {
                     });
                 }
                 
-
                 await new Promise(resolve => setTimeout(resolve, 3000));
             }
             
-
             pairs.forEach(pair => {
                 const element = document.getElementById(pair.elementId);
                 if (element.textContent === 'Loading...') {
@@ -719,7 +743,9 @@ h3 {
             updateExchangeRates();
         });
 
-
+        // ======================
+        // Initialize
+        // ======================
         loadSettings();
         updateDisplay();
         updateExchangeRates();
