@@ -569,7 +569,7 @@ h3 {
             
             if (useApi) {
                 try {
-                    const apiKey = localStorage.getItem('exchangeApiKey') || 'b7d4d462eb50fc35c85a9a450d230d80';
+                    const apiKey = localStorage.getItem('exchangeApiKey') || 'd6cd5016f4cb1d7314c8735a55e785a1';
                     const response = await fetch(
                         `https://api.exchangerate.host/live?access_key=${apiKey}&source=${fromCurrency}&currencies=${toCurrency}&format=1`
                     );
@@ -665,7 +665,7 @@ h3 {
         }
 
         async function fetchRateGroup(pairs) {
-            const apiKey = localStorage.getItem('exchangeApiKey') || 'b7d4d462eb50fc35c85a9a450d230d80';
+            const apiKey = localStorage.getItem('exchangeApiKey') || 'd6cd5016f4cb1d7314c8735a55e785a1';
             const sourceCurrencies = [...new Set(pairs.map(pair => pair.from))];
             
             for (const source of sourceCurrencies) {
